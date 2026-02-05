@@ -30,6 +30,16 @@ public class TagService : ITagService
 
             foreach (var tagName in tagNames)
             {
+                if (tagName.Length > 30)
+                {
+                    _logger.LogWarning("Tag '{TagName}' exceeds 30 characters and will be ignored", tagName);
+                    continue;
+                }
+                if (!System.Text.RegularExpressions.Regex.IsMatch(tagName, "^[a-z0-9\\-]+$"))
+                {
+                    _logger.LogWarning("Tag '{TagName}' contains invalid characters and will be ignored", tagName);
+                    continue;
+                }
                 var existingTag = await _context.Tags
                     .FirstOrDefaultAsync(t => t.Name == tagName);
 

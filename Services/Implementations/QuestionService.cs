@@ -95,7 +95,14 @@ public class QuestionService : IQuestionService
     {
         try
         {
-            var question = await _context.Questions.FindAsync(questionId);
+            var question = await _context.Questions
+                .Include(q => q.Comments)
+                .Include(q => q.Votes)
+                .Include(q => q.Answers)
+                    .ThenInclude(a => a.Comments)
+                .Include(q => q.Answers)
+                    .ThenInclude(a => a.Votes)
+                .FirstOrDefaultAsync(q => q.Id == questionId);
 
             if (question == null)
             {
@@ -109,6 +116,14 @@ public class QuestionService : IQuestionService
                 return (false, "You do not have permission to delete this question");
             }
 
+            if (question.Comments.Any())
+            {
+                _context.Comments.RemoveRange(question.Comments);
+            }
+            if (question.Votes.Any())
+            {
+                _context.Votes.RemoveRange(question.Votes);
+            }
             _questionRepo.Remove(question);
             await _questionRepo.SaveChangesAsync();
 
