@@ -12,3 +12,10 @@ public class CommentCreateDto
 
     public int? AnswerId { get; set; }
 }
+
+public class CommentUpdateDto
+{
+    [Required]
+    [StringLength(500, MinimumLength = 5)]
+    public string Body { get; set; } = string.Empty;
+}

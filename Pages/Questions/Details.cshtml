@@ -96,7 +96,17 @@ else
                                 </div>
                             </div>
                             <div class="col-md-11">
-                                <p style="white-space: pre-wrap;">@answer.Body</p>
+                                <p id="answer-@answer.Id-body" style="white-space: pre-wrap;">@answer.Body</p>
+                                <div id="answer-@answer.Id-edit" class="d-none">
+                                    <div class="mt-2">
+                                        <textarea class="form-control" id="answer-@answer.Id-edit-text" rows="6" minlength="20" maxlength="5000">@answer.Body</textarea>
+                                        <div class="mt-2">
+                                            <button class="btn btn-sm btn-primary me-2" onclick="submitAnswerEdit(@answer.Id)">Save</button>
+                                            <button class="btn btn-sm btn-secondary" onclick="cancelAnswerEdit(@answer.Id)">Cancel</button>
+                                        </div>
+                                        <div id="answer-@answer.Id-edit-error" class="text-danger mt-2 d-none"></div>
+                                    </div>
+                                </div>
 
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
@@ -113,12 +123,26 @@ else
                                 </div>
 
                                 <div class="mt-3">
+                                    <div class="mb-2 d-none" id="answer-@answer.Id-owner-actions">
+                                        <button class="btn btn-outline-primary btn-sm me-2" onclick="showAnswerEdit(@answer.Id)">Edit</button>
+                                    </div>
                                     <h6>Comments</h6>
                                     <div id="answer-@answer.Id-comments">
                                         @foreach (var comment in answer.Comments)
                                         {
                                             <div class="border-bottom py-2">
-                                                <small>@comment.Body - <strong>@comment.User.Username</strong> (@comment.CreatedAt.ToString("MMM dd"))</small>
+                                                <small id="comment-@comment.Id-body">@comment.Body - <strong>@comment.User.Username</strong> (@comment.CreatedAt.ToString("MMM dd"))</small>
+                                                <div class="d-none" id="comment-@comment.Id-edit">
+                                                    <div class="mt-2">
+                                                        <input type="text" class="form-control form-control-sm" id="comment-@comment.Id-edit-text" maxlength="500" value="@comment.Body">
+                                                        <div class="mt-1">
+                                                            <button class="btn btn-sm btn-primary me-2" onclick="submitCommentEdit(@comment.Id)">Save</button>
+                                                            <button class="btn btn-sm btn-secondary" onclick="cancelCommentEdit(@comment.Id)">Cancel</button>
+                                                        </div>
+                                                        <div id="comment-@comment.Id-edit-error" class="text-danger mt-1 d-none"></div>
+                                                    </div>
+                                                </div>
+                                                <button class="btn btn-link btn-sm p-0 d-none" id="comment-@comment.Id-edit-btn" onclick="showCommentEdit(@comment.Id)">Edit</button>
                                             </div>
                                         }
                                     </div>
@@ -163,6 +187,24 @@ else
                 if (!answer.IsAccepted)
                 {
                     <text>document.getElementById('accept-@answer.Id').classList.remove('d-none');</text>
+                }
+            }
+        }
+        if (getToken()) {
+            @foreach (var ans in Model.Question!.Answers)
+            {
+                <text>
+                if (@ans.UserId == currentUserId) {
+                    document.getElementById('answer-@ans.Id-owner-actions').classList.remove('d-none');
+                }
+                </text>
+                foreach (var c in ans.Comments)
+                {
+                    <text>
+                    if (@c.UserId == currentUserId) {
+                        document.getElementById('comment-@c.Id-edit-btn').classList.remove('d-none');
+                    }
+                    </text>
                 }
             }
         }
@@ -337,6 +379,99 @@ else
                 }
             } catch (error) {
                 alert('An error occurred. Please try again.');
+            }
+        }
+
+        function showAnswerEdit(answerId) {
+            document.getElementById('answer-' + answerId + '-edit').classList.remove('d-none');
+            document.getElementById('answer-' + answerId + '-body').classList.add('d-none');
+        }
+        function cancelAnswerEdit(answerId) {
+            document.getElementById('answer-' + answerId + '-edit').classList.add('d-none');
+            document.getElementById('answer-' + answerId + '-body').classList.remove('d-none');
+            document.getElementById('answer-' + answerId + '-edit-error').classList.add('d-none');
+        }
+        async function submitAnswerEdit(answerId) {
+            if (!getToken()) {
+                window.location.href = '/Login';
+                return;
+            }
+            const body = document.getElementById('answer-' + answerId + '-edit-text').value;
+            if (body.length < 20) {
+                const el = document.getElementById('answer-' + answerId + '-edit-error');
+                el.textContent = 'Answer must be at least 20 characters';
+                el.classList.remove('d-none');
+                return;
+            }
+            try {
+                const response = await fetch('/api/answers/' + answerId, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + getToken()
+                    },
+                    body: JSON.stringify({ body })
+                });
+                if (response.ok) {
+                    location.reload();
+                } else if (response.status === 401) {
+                    window.location.href = '/Login';
+                } else {
+                    const data = await response.json();
+                    const el = document.getElementById('answer-' + answerId + '-edit-error');
+                    el.textContent = data.message || 'Failed to update answer';
+                    el.classList.remove('d-none');
+                }
+            } catch {
+                const el = document.getElementById('answer-' + answerId + '-edit-error');
+                el.textContent = 'An error occurred. Please try again.';
+                el.classList.remove('d-none');
+            }
+        }
+        function showCommentEdit(commentId) {
+            document.getElementById('comment-' + commentId + '-edit').classList.remove('d-none');
+            document.getElementById('comment-' + commentId + '-edit-btn').classList.add('d-none');
+        }
+        function cancelCommentEdit(commentId) {
+            document.getElementById('comment-' + commentId + '-edit').classList.add('d-none');
+            document.getElementById('comment-' + commentId + '-edit-btn').classList.remove('d-none');
+            document.getElementById('comment-' + commentId + '-edit-error').classList.add('d-none');
+        }
+        async function submitCommentEdit(commentId) {
+            if (!getToken()) {
+                window.location.href = '/Login';
+                return;
+            }
+            const body = document.getElementById('comment-' + commentId + '-edit-text').value;
+            if (body.length < 5) {
+                const el = document.getElementById('comment-' + commentId + '-edit-error');
+                el.textContent = 'Comment must be at least 5 characters';
+                el.classList.remove('d-none');
+                return;
+            }
+            try {
+                const response = await fetch('/api/comments/' + commentId, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + getToken()
+                    },
+                    body: JSON.stringify({ body })
+                });
+                if (response.ok) {
+                    location.reload();
+                } else if (response.status === 401) {
+                    window.location.href = '/Login';
+                } else {
+                    const data = await response.json();
+                    const el = document.getElementById('comment-' + commentId + '-edit-error');
+                    el.textContent = data.message || 'Failed to update comment';
+                    el.classList.remove('d-none');
+                }
+            } catch {
+                const el = document.getElementById('comment-' + commentId + '-edit-error');
+                el.textContent = 'An error occurred. Please try again.';
+                el.classList.remove('d-none');
             }
         }
     </script>

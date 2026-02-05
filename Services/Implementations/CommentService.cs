@@ -48,6 +48,33 @@ public class CommentService : ICommentService
         }
     }
 
+    public async Task<(bool Success, string Message)> UpdateCommentAsync(int commentId, CommentUpdateDto dto, int userId)
+    {
+        try
+        {
+            var comment = await _context.Comments.FindAsync(commentId);
+            if (comment == null)
+            {
+                return (false, "Comment not found");
+            }
+            if (comment.UserId != userId)
+            {
+                _logger.LogWarning("User {UserId} attempted to update comment {CommentId} owned by user {OwnerId}",
+                    userId, commentId, comment.UserId);
+                return (false, "You do not have permission to update this comment");
+            }
+            comment.Body = dto.Body;
+            await _context.SaveChangesAsync();
+            _logger.LogInformation("Comment {CommentId} updated by user {UserId}", commentId, userId);
+            return (true, "Comment updated successfully");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating comment {CommentId}", commentId);
+            return (false, "An error occurred while updating the comment");
+        }
+    }
+
     public async Task<List<Comment>> GetCommentsByQuestionIdAsync(int questionId)
     {
         try
