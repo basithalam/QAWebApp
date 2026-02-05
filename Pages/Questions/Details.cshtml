@@ -330,7 +330,7 @@ else
             }
 
             if (body.length < 5) {
-                alert('Comment must be at least 5 characters');
+                if (typeof showToast === 'function') showToast('error', 'Comment must be at least 5 characters');
                 return;
             }
 
@@ -373,10 +373,10 @@ else
                     window.location.href = '/Login';
                 } else {
                     const data = await response.json();
-                    alert(data.message || 'Failed to delete question');
+                    if (typeof showToast === 'function') showToast('error', data.message || 'Failed to delete question');
                 }
             } catch (error) {
-                alert('An error occurred. Please try again.');
+                if (typeof showToast === 'function') showToast('error', 'An error occurred');
             }
         }
 
@@ -398,10 +398,10 @@ else
                     window.location.href = '/Login';
                 } else {
                     const data = await response.json();
-                    alert(data.message || 'Failed to accept answer');
+                    if (typeof showToast === 'function') showToast('error', data.message || 'Failed to accept answer');
                 }
             } catch (error) {
-                alert('An error occurred. Please try again.');
+                if (typeof showToast === 'function') showToast('error', 'An error occurred');
             }
         }
 
@@ -424,7 +424,7 @@ else
                     window.location.href = '/Login';
                 } else {
                     const data = await response.json();
-                    alert(data.message || 'Failed to delete answer');
+                    if (typeof showToast === 'function') showToast('error', data.message || 'Failed to delete answer');
                 }
             } catch {
                 alert('An error occurred. Please try again.');

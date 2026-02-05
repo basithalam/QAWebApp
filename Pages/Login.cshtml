@@ -59,14 +59,17 @@
                     localStorage.setItem('jwtToken', data.token);
                     localStorage.setItem('username', data.user.username);
                     localStorage.setItem('userId', data.user.id);
+                    if (typeof showToast === 'function') showToast('success', 'Login successful');
                     window.location.href = '/';
                 } else {
                     document.getElementById('errorMessage').textContent = data.message || 'Login failed';
                     document.getElementById('errorMessage').classList.remove('d-none');
+                    if (typeof showToast === 'function') showToast('error', data.message || 'Login failed');
                 }
             } catch (error) {
                 document.getElementById('errorMessage').textContent = 'An error occurred. Please try again.';
                 document.getElementById('errorMessage').classList.remove('d-none');
+                if (typeof showToast === 'function') showToast('error', 'An error occurred');
             }
         });
 

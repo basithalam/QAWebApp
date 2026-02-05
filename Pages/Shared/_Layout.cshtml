@@ -62,11 +62,12 @@
 
     <footer class="border-top footer text-muted mt-5">
         <div class="container text-center py-3">
-            &copy; 2024 Q&A Application - Built with ASP.NET Core
+            &copy; 2026 Q&A Application - Built with ASP.NET Core
         </div>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <div id="toastContainer" class="toast-container position-fixed bottom-0 end-0 p-3"></div>
     <script>
         // JWT Token Management
         function getToken() {
@@ -111,6 +112,23 @@
 
         // Call on page load
         updateAuthUI();
+
+        function showToast(type, message) {
+            const container = document.getElementById('toastContainer');
+            const toastEl = document.createElement('div');
+            const bg = type === 'success' ? 'bg-success' : type === 'error' ? 'bg-danger' : type === 'warning' ? 'bg-warning' : 'bg-info';
+            toastEl.className = 'toast align-items-center text-white ' + bg + ' border-0';
+            toastEl.setAttribute('role', 'alert');
+            toastEl.setAttribute('aria-live', 'assertive');
+            toastEl.setAttribute('aria-atomic', 'true');
+            toastEl.innerHTML = '<div class=\"d-flex\"><div class=\"toast-body\">' + message + '</div><button type=\"button\" class=\"btn-close btn-close-white me-2 m-auto\" data-bs-dismiss=\"toast\" aria-label=\"Close\"></button></div>';
+            container.appendChild(toastEl);
+            const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
+            toast.show();
+            toastEl.addEventListener('hidden.bs.toast', () => {
+                if (toastEl.parentNode) toastEl.parentNode.removeChild(toastEl);
+            });
+        }
     </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
