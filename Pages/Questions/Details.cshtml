@@ -156,6 +156,7 @@ else
                                                     </div>
                                                 </div>
                                                 <button class="btn btn-link btn-sm p-0 d-none" id="comment-@comment.Id-edit-btn" onclick="showCommentEdit(@comment.Id)">Edit</button>
+                                                <button class="btn btn-link btn-sm p-0 text-danger d-none" id="comment-@comment.Id-delete-btn" onclick="deleteComment(@comment.Id)">Delete</button>
                                             </div>
                                         }
                                     </div>
@@ -427,7 +428,7 @@ else
                     if (typeof showToast === 'function') showToast('error', data.message || 'Failed to delete answer');
                 }
             } catch {
-                alert('An error occurred. Please try again.');
+                if (typeof showToast === 'function') showToast('error', 'An error occurred. Please try again.');
             }
         }
         async function deleteComment(commentId) {
@@ -449,10 +450,10 @@ else
                     window.location.href = '/Login';
                 } else {
                     const data = await response.json();
-                    alert(data.message || 'Failed to delete comment');
+                    if (typeof showToast === 'function') showToast('error', data.message || 'Failed to delete comment');
                 }
             } catch {
-                alert('An error occurred. Please try again.');
+                if (typeof showToast === 'function') showToast('error', 'An error occurred. Please try again.');
             }
         }
         function showAnswerEdit(answerId) {
