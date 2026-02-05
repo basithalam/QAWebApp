@@ -3,6 +3,7 @@ using QAWebApp.Data;
 using QAWebApp.DTOs;
 using QAWebApp.Models;
 using QAWebApp.Services.Interfaces;
+using QAWebApp.Repositories.Interfaces;
 
 namespace QAWebApp.Services.Implementations;
 
@@ -11,12 +12,14 @@ public class QuestionService : IQuestionService
     private readonly ApplicationDbContext _context;
     private readonly ITagService _tagService;
     private readonly ILogger<QuestionService> _logger;
+    private readonly IGenericRepository<Question> _questionRepo;
 
-    public QuestionService(ApplicationDbContext context, ITagService tagService, ILogger<QuestionService> logger)
+    public QuestionService(ApplicationDbContext context, ITagService tagService, ILogger<QuestionService> logger, IGenericRepository<Question> questionRepo)
     {
         _context = context;
         _tagService = tagService;
         _logger = logger;
+        _questionRepo = questionRepo;
     }
 
     public async Task<(bool Success, string Message, Question? Question)> CreateQuestionAsync(QuestionCreateDto dto, int userId)
@@ -34,8 +37,8 @@ public class QuestionService : IQuestionService
                 Tags = tags
             };
 
-            _context.Questions.Add(question);
-            await _context.SaveChangesAsync();
+            await _questionRepo.AddAsync(question);
+            await _questionRepo.SaveChangesAsync();
 
             _logger.LogInformation("Question {QuestionId} created by user {UserId}", question.Id, userId);
             return (true, "Question created successfully", question);
@@ -106,8 +109,8 @@ public class QuestionService : IQuestionService
                 return (false, "You do not have permission to delete this question");
             }
 
-            _context.Questions.Remove(question);
-            await _context.SaveChangesAsync();
+            _questionRepo.Remove(question);
+            await _questionRepo.SaveChangesAsync();
 
             _logger.LogInformation("Question {QuestionId} deleted by user {UserId}", questionId, userId);
             return (true, "Question deleted successfully");

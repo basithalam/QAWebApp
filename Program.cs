@@ -5,6 +5,8 @@ using QAWebApp.Data;
 using QAWebApp.Services.Implementations;
 using QAWebApp.Services.Interfaces;
 using System.Text;
+using QAWebApp.Repositories.Interfaces;
+using QAWebApp.Repositories.Implementations;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -51,6 +53,7 @@ builder.Services.AddScoped<IAnswerService, AnswerService>();
 builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<ITagService, TagService>();
 builder.Services.AddScoped<IVoteService, VoteService>();
+builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
 // Configure logging
 builder.Logging.ClearProviders();

@@ -3,6 +3,7 @@ using QAWebApp.Data;
 using QAWebApp.DTOs;
 using QAWebApp.Models;
 using QAWebApp.Services.Interfaces;
+using QAWebApp.Repositories.Interfaces;
 
 namespace QAWebApp.Services.Implementations;
 
@@ -10,11 +11,13 @@ public class AnswerService : IAnswerService
 {
     private readonly ApplicationDbContext _context;
     private readonly ILogger<AnswerService> _logger;
+    private readonly IGenericRepository<Answer> _answerRepo;
 
-    public AnswerService(ApplicationDbContext context, ILogger<AnswerService> logger)
+    public AnswerService(ApplicationDbContext context, ILogger<AnswerService> logger, IGenericRepository<Answer> answerRepo)
     {
         _context = context;
         _logger = logger;
+        _answerRepo = answerRepo;
     }
 
     public async Task<(bool Success, string Message, Answer? Answer)> CreateAnswerAsync(AnswerCreateDto dto, int userId)
@@ -35,8 +38,8 @@ public class AnswerService : IAnswerService
                 CreatedAt = DateTime.UtcNow
             };
 
-            _context.Answers.Add(answer);
-            await _context.SaveChangesAsync();
+            await _answerRepo.AddAsync(answer);
+            await _answerRepo.SaveChangesAsync();
 
             _logger.LogInformation("Answer {AnswerId} created for question {QuestionId} by user {UserId}",
                 answer.Id, dto.QuestionId, userId);
@@ -100,8 +103,8 @@ public class AnswerService : IAnswerService
                 return (false, "You do not have permission to delete this answer");
             }
 
-            _context.Answers.Remove(answer);
-            await _context.SaveChangesAsync();
+            _answerRepo.Remove(answer);
+            await _answerRepo.SaveChangesAsync();
 
             _logger.LogInformation("Answer {AnswerId} deleted by user {UserId}", answerId, userId);
             return (true, "Answer deleted successfully");

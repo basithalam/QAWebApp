@@ -1,0 +1,91 @@
+@page
+@model EditModel
+@{
+    ViewData["Title"] = "Edit Question";
+}
+
+@if (Model.Question == null)
+{
+    <div class="alert alert-danger">Question not found.</div>
+}
+else
+{
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Edit Question</h4>
+                    <a href="/Questions/Details?id=@Model.Question.Id" class="btn btn-outline-secondary btn-sm">Back to Details</a>
+                </div>
+                <div class="card-body">
+                    <div id="errorMessage" class="alert alert-danger d-none"></div>
+                    <form id="editQuestionForm">
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Title</label>
+                            <input type="text" class="form-control" id="title" required minlength="10" maxlength="200" value="@Model.Question.Title">
+                        </div>
+                        <div class="mb-3">
+                            <label for="body" class="form-label">Body</label>
+                            <textarea class="form-control" id="body" rows="10" required minlength="20" maxlength="5000">@Model.Question.Body</textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="tags" class="form-label">Tags</label>
+                            <input type="text" class="form-control" id="tags" required value="@string.Join(", ", Model.Question.Tags.Select(t => t.Name))">
+                            <div class="form-text">Comma-separated tags (e.g., csharp, aspnet, sql)</div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                        <a href="/Questions/Details?id=@Model.Question.Id" class="btn btn-secondary">Cancel</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        const questionOwnerId = @Model.Question?.UserId ?? 0;
+        const questionId = @Model.Question?.Id ?? 0;
+
+        if (!getToken()) {
+            window.location.href = '/Login';
+        }
+
+        const currentUserId = parseInt(localStorage.getItem('userId') || '0', 10);
+        if (currentUserId !== questionOwnerId) {
+            window.location.href = '/Questions/Details?id=' + questionId;
+        }
+
+        document.getElementById('editQuestionForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const title = document.getElementById('title').value;
+            const body = document.getElementById('body').value;
+            const tags = document.getElementById('tags').value;
+
+            try {
+                const response = await fetch('/api/questions/' + questionId, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + getToken()
+                    },
+                    body: JSON.stringify({ title, body, tags })
+                });
+
+                if (response.ok) {
+                    window.location.href = '/Questions/Details?id=' + questionId;
+                } else if (response.status === 401) {
+                    window.location.href = '/Login';
+                } else {
+                    const data = await response.json();
+                    document.getElementById('errorMessage').textContent = data.message || 'Failed to update question';
+                    document.getElementById('errorMessage').classList.remove('d-none');
+                }
+            } catch (error) {
+                document.getElementById('errorMessage').textContent = 'An error occurred. Please try again.';
+                document.getElementById('errorMessage').classList.remove('d-none');
+            }
+        });
+    </script>
+}
